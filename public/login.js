@@ -32,12 +32,16 @@ document.getElementById('login').addEventListener('submit', function (event) {
         axios.post("http://localhost:3000/login", data)
             .then((response) => {
                 console.log('ducess login');
-                const token=response.data;
+                const token=response.data.token;
+                console.log(token)
+                const systemMessage = response.data.systemMessage.content;
+                localStorage.setItem('userinfo',systemMessage);
                 // Handle the response as needed
                 //const token = "your_received_token";
 
 // Store the token in local storage
                localStorage.setItem('token', token);
+               window.location.href="./chat.html"
             })
             .catch((error) => {
                 console.error('Error:', error);

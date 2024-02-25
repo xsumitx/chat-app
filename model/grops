@@ -1,0 +1,40 @@
+const fetchOldMessages = () => {
+    const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
+    
+    // Check if there are any old messages in local storage
+    if (oldMessages.length > 0) {
+        displayMessages(oldMessages);
+
+        // Remove the old messages from local storage
+        localStorage.removeItem('messages');
+
+        // Return the last message ID in local storage
+        return oldMessages[oldMessages.length - 1].id;
+    }
+
+    // If there are no old messages, return -1
+    return -1;
+};
+
+// Function to fetch chat messages from the server and display userinfo as a system message
+const fetchChatMessages = () => {
+    const lastMessageId = fetchOldMessages();
+
+    axios.get(`http://localhost:3000/chat?lastMessageId=${lastMessageId}`, { headers })
+        .then((response) => {
+            const newMessages = response.data.messages;
+
+            // Append new messages to old messages
+            const allMessages = [...newMessages];
+
+            // Store all messages in local storage
+            localStorage.setItem('messages', JSON.stringify(allMessages));
+
+            // Display all messages
+            displayMessages(allMessages);
+        })
+        .catch((error) => {
+            console.error('Error fetching chat messages:', error);
+            // Handle the error as needed
+        });
+};
