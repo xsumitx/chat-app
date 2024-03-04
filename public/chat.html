@@ -28,7 +28,7 @@
         #groupcontainer {
     position: fixed;
     top: 100px; /* Adjust as needed */
-    left: 100px; /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
     bottom: 20px; /* Adjust as needed */
     padding: 20px;
     background-color: white; /* Add your preferred background color */
@@ -67,13 +67,41 @@
             margin-top: 400px;
         }
 
-        .input {
-            padding: 10px;
-            border: none;
-            border-radius: 20px;
-            margin-right: 10px;
-            width: 300px;
-        }
+        #inputContainer {
+    background-color: #345de2;
+    position: fixed;
+    top: 480px; /* Adjust as needed */
+    right: 430px; /* Adjust as needed */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(87, 80, 80, 0.1);
+    width: 300px;
+    text-align: center;
+    z-index: 999; /* Ensure it's above other elements */
+    transform: translate(0, 50%); /* Move it down */
+}
+
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .file-input-label {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .file-input-label:hover {
+    background-color: #45a049;
+  }
 
         .submit {
             padding: 10px 20px;
@@ -143,7 +171,7 @@
     top: 20px; /* Adjust as needed */
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgb(192, 53, 53);
+    background-color:  #345de2;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -156,6 +184,19 @@
 #addMemberContainer button {
     cursor: pointer;
 }
+#groupMembersContainer {
+     display: none;
+    position: fixed;
+    top: 50px; /* Adjust as needed */
+    right: 350px; /* Adjust as needed */
+    background-color: #f0f0f0; /* Example background color */
+    padding: 10px; /* Example padding */
+    border-radius: 5px; /* Example border radius */
+    
+    z-index: 1000; /* Example z-index */
+    /* Add more styling properties as needed */
+}
+
 
 
      
@@ -176,8 +217,29 @@
     <div id="groupconatiner"></div>
     <!-- HTML -->
 <div id="groupMembersContainer"></div>
+   
+<!-- Add this line to your HTML file to include Socket.IO client library -->
+
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script type="text/javascript" src="./chat.js"></script>
+   <!-- index.html -->
+
+
+   
+   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+   <script>
+    const socket = io('http://localhost:3000');
+
+   </script>
+
+    
+
+    
+
+
+<script type="text/javascript" src="./chat.js"></script>
+     
+    
+
 </body>
 </html>

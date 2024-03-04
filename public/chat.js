@@ -1,5 +1,8 @@
 // Assuming you have the token and userinfo stored in local storage after login
 // Assuming you have the token and userinfo stored in local storage after login
+//import io from 'socket.io-client';
+//const socket = io();
+
 const token = localStorage.getItem('token');
 console.log(token);
 
@@ -8,7 +11,7 @@ console.log(userinfo);
 
 const headers = {
   'Authorization': token,
-  // Add any other headers if needed
+  'Content-Type': 'multipart/form-data' // Set Content-Type header
 };
 
 const container = document.getElementById('messageContainer');
@@ -18,26 +21,37 @@ const container = document.getElementById('messageContainer');
 // Function to display messages in the DOM
 function displayMessages(messages) {
   container.innerHTML = '';
-    messages.forEach(message => {
+  
+  messages.forEach(message => {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message');
 
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
+      const senderDiv = document.createElement('div');
+      senderDiv.classList.add('sender');
+      senderDiv.textContent = `${message.Name}:`;
 
-        const senderDiv = document.createElement('div');
-        senderDiv.classList.add('sender');
-        senderDiv.textContent = ` ${message.Name} :${message.GroupMessage} `;
-        messageDiv.appendChild(senderDiv);
+      if (message.type === 'text') {
+          const contentDiv = document.createElement('div');
+          contentDiv.classList.add('content');
+          contentDiv.textContent = message.message;
+          messageDiv.appendChild(senderDiv);
+          messageDiv.appendChild(contentDiv);
+      } else if (message.type === 'image') {
+          const image = new Image();
+          image.src = message.url;
+          image.classList.add('image');
+          image.onload = () => {
+              container.scrollTop = container.scrollHeight;
+          };
+          messageDiv.appendChild(senderDiv);
+          messageDiv.appendChild(image);
+      }
 
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add('content');
-        contentDiv.textContent = message.Message;
-        messageDiv.appendChild(contentDiv);
+      container.appendChild(messageDiv);
+  });
 
-        container.appendChild(messageDiv);
-    });
-
-    // Optionally, scroll to the bottom to show the latest messages
-    container.scrollTop = container.scrollHeight;
+  // Optionally, scroll to the bottom to show the latest messages
+  container.scrollTop = container.scrollHeight;
 }
 
 // Set up polling to fetch chat messages and display userinfo every second
@@ -155,6 +169,7 @@ function showGroup(groups) {
         });
         const allMembersButton = document.getElementById('allMembersButton');
     allMembersButton.addEventListener('click', () => {
+      document.getElementById("groupMembersContainer").style.display = "block";
          fetchgroupmember(groupId)
     });
     }
@@ -198,18 +213,19 @@ function showGroup(groups) {
           memberElement.classList.add('member');
   
           // Construct the HTML content for each member
-          let memberInfoHTML = `
-              <p><strong>Member Name:</strong> ${member.Name}</p>
-              <p><strong>Group ID:</strong> ${member.GroupId}</p>
+          let memberInfoHTML =  `<p><strong>Name:</strong> ${member.Name}</p>
+              
           `;
   
-          // Check if member is an admin
+      
           if (member.Admin) {
               // If member is an admin, add an icon to indicate it
               memberInfoHTML += `<p><i class="fas fa-crown"></i> Admin</p>`;
+
+
           } else {
               // If member is not an admin, add a button to make them admin
-              memberInfoHTML += `<button class="make-admin-btn" data-user-id="${member.UserId}" data-group-id="${member.GroupId}">Make Admin</button>`;
+              memberInfoHTML += `<button class="make-admin-btn" </button>`;
           }
   
           // Set the HTML content for the member element
@@ -262,6 +278,9 @@ function showGroup(groups) {
             .then(response => {
                 // Handle success
                 console.log('New member added successfully:', response.data);
+                
+                
+                
                 // You may want to update the UI to reflect the addition of the member
             })
             .catch(error => {
@@ -295,52 +314,109 @@ function showGroup(groups) {
 
     // Append the unordered list to the container
     container.appendChild(ul);
-  }
-  function appendMessageInput(groupId) {
-    // Remove any existing input and submit button
-    //clearMessageInput();
-  
-    // Create an input field
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Type your message...';
-  
-    // Create a submit button
-    const submitButton = document.createElement('button');
-    submitButton.textContent = 'Submit';
-    submitButton.addEventListener('click', () => {
-      const message = input.value;
-      const data = {
-        message: message
-      };
-  
-      axios.post(`http://localhost:3000/postmessage/${groupId}`, data, { headers })
-        .then(response => {
-          // Handle the response data, e.g., display it or perform further actions
-          console.log('POST request successful:', response.data);
-        })
-        .catch(error => {
-          console.error('Error making POST request:', error);
-        });
-  
-      console.log(`New message for Group ID ${groupId}:`, message);
-      // Clear the input field after submitting
-      input.value = '';
-    });
-  
-    // Append the input field and submit button to the container for the respective group
-    
-    const messageContainer = document.getElementById('messageContainer');
-    messageContainer.appendChild(input);
-    messageContainer.appendChild(submitButton);
-    
-  }
+  } 
 }
+
+function appendMessageInput(groupId) {
+  if (document.getElementById('inputContainer')) {
+    return; // If it exists, do nothing
+}
+
+const inputcontainer = document.createElement('div');
+inputcontainer.id = 'inputContainer';
+  // Create an input field for text message
+  const textInput = document.createElement('input');
+  textInput.type = 'text';
+  textInput.placeholder = 'Type your message...';
+
+  // Create a file input field for image selection
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
   
 
+  // Create a submit button
+  const submitButton = document.createElement('button');
+  submitButton.textContent = 'Submit';
 
+  // Create an image icon for visually representing image upload
+  const imageIcon = document.createElement('img');
+  imageIcon.src = 'image_icon.png'; // Provide the path to your image icon
+  imageIcon.classList.add('image-icon'); // Add a class for styling
+  imageIcon.addEventListener('click', () => {
+    fileInput.click();
+  });
+  // Append the input fields, image icon, and button to the container
+  inputcontainer.appendChild(textInput);
+  inputcontainer.appendChild(fileInput);
+  inputcontainer.appendChild(imageIcon);
+  inputcontainer.appendChild(submitButton);
 
+  // Add event listener to submit button
+  submitButton.addEventListener('click', () => {
+      const message = textInput.value;
+      const file = fileInput.files[0];
+      console.log(message);
+
+      if (file) {
+          const formData = new FormData();
+          formData.append('image', file);
+
+          // Log the FormData object to the console
+          console.log('FormData:', formData);
+
+          // Send image to backend
+          axios.post(`http://localhost:3000/uploadImage/${groupId}`, formData, { headers })
+              .then(response => {
+                  console.log('Image uploaded successfully:', response.data.imageUrl);
+                  // Handle the response data, e.g., display it or perform further actions
+              })
+              .catch(error => {
+                  console.error('Error uploading image:', error);
+                  // Handle error
+              });
+      } else {
+        const formData = new FormData();
+          formData.append('message', message);
+          
+
+          const data = {
+              message: message
+          };
+          console.log(data.message);
+
+          // Send text message to backend
+          axios.post(`http://localhost:3000/postmessage/${groupId}`,formData, { headers })
+              .then(response => {
+                  console.log('POST request successful:', response.data);
+                  // Emit a 'new message' event from the client side
+                  socket.emit('new message', { groupId, message: data }, (ack) => {
+                      if (ack === 'ok') {
+                          console.log('Event "new message" emitted successfully');
+                      } else {
+                          console.log('Event "new message" failed to emit');
+                      }
+                  });
+
+                  // Handle the response data, e.g., display it or perform further actions
+              })
+              .catch(error => {
+                  console.error('Error making POST request:', error);
+                  io.emit('postMessage', { groupId, message: data });
+
+                  // Handle error
+              });
+      }
+
+      console.log(`New message for Group ID ${groupId}:`, message);
+      // Clear the input fields after submitting
+      textInput.value = '';
+      fileInput.value = null;
+  });
+
+  // Append the container to the document body or any other parent element
+  document.body.appendChild(inputcontainer);
+}
 
 
 // Call the showgroup function with the groups data
@@ -354,3 +430,43 @@ axios.get("http://localhost:3000/group")
   .catch(error => {
     console.log('Failed to fetch groups:', error);
   })
+  socket.on('received', (groupId) => {
+    console.log('socket is working ')
+    // Call the function to fetch and display messages for the specified group
+    axios.get(`http://localhost:3000/groupmessage/${groupId}`, { headers })
+      .then(response => {
+        // Handle the response data, e.g., update the frontend display
+        console.log('GET request successful:', response.data);
+        // Update the right side with the new messages
+        displayMessages(response.data);
+        appendMessageInput(groupId);
+       appendMemberInput(groupId) // Replace with your actual function to display messages
+      })
+      .catch(error => {
+        console.error('Error making GET request:', error);
+      });
+  });
+  axios.get("http://localhost:3000/group")
+  .then(response => {
+    console.log(response);
+    showGroup(response.data);
+  })
+  .catch(error => {
+    console.log('Failed to fetch groups:', error);
+  })
+  socket.on('received', (groupId) => {
+    console.log('socket is working ')
+    // Call the function to fetch and display messages for the specified group
+    axios.get(`http://localhost:3000/groupmessage/${groupId}`, { headers })
+      .then(response => {
+        // Handle the response data, e.g., update the frontend display
+        console.log('GET request successful:', response.data);
+        // Update the right side with the new messages
+        displayMessages(response.data);
+        appendMessageInput(groupId);
+       appendMemberInput(groupId) // Replace with your actual function to display messages
+      })
+      .catch(error => {
+        console.error('Error making GET request:', error);
+      });
+  });

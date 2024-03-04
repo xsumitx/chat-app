@@ -15,12 +15,20 @@ module.exports = {
 
       if (groupMember) {
         // Use findAll instead of findall, and correct the variable name
-       // const groupidd=parseInt(groupId,10)
         const groupMessages = await GroupMessages.findAll({
           where: { GroupId: groupId }
         });
 
-        res.send(groupMessages);
+        // Append image URLs to messages
+        const formattedMessages = groupMessages.map(message => {
+          if (message.GroupMessage.startsWith('https://')) {
+            return { type: 'image', url: message.GroupMessage, Name:message.Name };
+          } else {
+            return { type: 'text', message: message.GroupMessage,Name:message.Name };
+          }
+        });
+
+        res.send(formattedMessages);
       } else {
         res.status(404).send('User is not a member of the specified group');
       }

@@ -1,32 +1,77 @@
 const GroupMessages = require('../model/GroupMessages');
-const User = require('../model/user');
-const GroupMember= require('../model/GroupMembers');
+const GroupMember = require('../model/GroupMembers');
+const Archived = require('../model/archived');
+const cron = require('node-cron');
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const multer = require('multer');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Configure Multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const allMessages = await GroupMessages.findAll();
+    await Promise.all(allMessages.map(async (msg) => {
+      await Archived.create({
+        Name: 'Sumit',
+        GroupId: msg.GroupId,
+        UserId: msg.UserId,
+        GroupMessage: msg.GroupMessage
+      });
+
+      await msg.destroy(); // Destroy the message after archiving
+    }));
+    console.log('Old messages archived and deleted successfully.');
+  } catch (error) {
+    console.error('Error archiving and deleting old messages:', error);
+  }
+}, {
+  timezone: 'Asia/Kolkata'
+});
+
 module.exports = {
   submitmessage: async (req, res) => {
-    const groupid = req.params.groupid;
-    const userid = req.user.id;
-    const message = req.body.message;
-    console.log(message)
-    console.log(groupid)
+    try {
+      // Parse form data from the request body
+      upload.single('image')(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+          return res.status(500).json({ error: 'File upload error' });
+        } else if (err) {
+          return res.status(500).json({ error: 'An error occurred' });
+        }
 
-    // Correct the model name to GroupMessages
-    const username = await GroupMember.findOne({
-      where: { id:userid } // Adjusted attribute names
-    });
-    GroupMessages.create({
-      GroupId: groupid,
-      Name:'Sumit',
-      UserId: userid,
-      GroupMessage: message
-    })
-      .then(createdMessage => {
-        // Handle the created message, e.g., send a response back to the client
+        // Access form data from req.body
+        const { message } = req.body;
+        const groupid = req.params.groupid;
+        const userid = req.user.id;
+
+        // Find user
+        const user = await GroupMember.findOne({ where: { UserId: userid } });
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Create message
+        const createdMessage = await GroupMessages.create({
+          GroupId: groupid,
+          Name: 'Sumit', // Consider getting the user's actual name here
+          UserId: userid,
+          GroupMessage: message
+        });
+
+        // Respond with created message
         res.status(201).json(createdMessage);
-      })
-      .catch(error => {
-        // Handle the error, e.g., send an error response to the client
-        console.error('Error creating message:', error);
-        res.status(500).send('Internal Server Error');
       });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'An error occurred' });
+    }
   }
 };

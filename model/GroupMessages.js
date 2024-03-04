@@ -16,7 +16,7 @@ const GroupMessages = sequelize.define('GroupMessages', {
         allowNull: false
     },
     GroupMessage: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(1000),
         allowNull: false
     },
     UserId: {
