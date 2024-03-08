@@ -1,6 +1,6 @@
 // Import necessary modules
 const express = require('express');
-const Message = require('../model/message');
+const Message = require('../models/Message');
 const { Op } = require('sequelize');
 
 

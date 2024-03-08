@@ -1,4 +1,4 @@
-const User = require('../model/user');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
 module.exports = {
@@ -6,17 +6,20 @@ module.exports = {
         try {
             const { name, email, password ,number } = req.body;
 
-            // Validate and sanitize user inputs here, if needed.
+           const  alreadyRegistered=await User.findOne({where:{email:email}})
+           if(alreadyRegistered){
+            res.status(200).json({message:'user already exists '})
+           }
 
             // Hash the password
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Create a new user with the hashed password
             const user = await User.create({
-                Name: name,
-                Email: email,
-                Password: hashedPassword, 
-                Number:number// Store the hashed password in the database
+                name: name,
+                email: email,
+                password: hashedPassword, 
+                number:number// Store the hashed password in the database
             });
 
             // Redirect to a success page or send a success response

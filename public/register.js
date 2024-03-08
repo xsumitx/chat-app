@@ -33,6 +33,7 @@ document.getElementById('register').addEventListener('submit', function (event) 
             .then((response) => {
                 console.log('I am inside the then block');
                 console.log(response.data);
+                window.location.href="./login.html"
                 // Handle the response as needed
             })
             .catch((error) => {
@@ -46,4 +47,7 @@ document.getElementById('signinLink').onclick = async function (e) {
    
     window.location.href="./login.html"
     console.log('done');
+}
+document.getElementById('forgotpassword').onclick=async function(e){
+    window.location.href="./verifyEmail.html"
 }

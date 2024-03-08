@@ -1,4 +1,4 @@
-const User = require('../model/user');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -15,7 +15,7 @@ module.exports = {
             }
 
             // Compare the provided password with the hashed password
-            const isPasswordMatch = await bcrypt.compare(password, user.Password);
+            const isPasswordMatch = await bcrypt.compare(password, user.password);
 
             if (isPasswordMatch) {
                 // Generate a JWT token

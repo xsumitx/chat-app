@@ -19,6 +19,21 @@ const container = document.getElementById('messageContainer');
 // Function to fetch old messages from local storage
 
 // Function to display messages in the DOM
+function makeAdmin(userId,groupId,groupName) {
+  const data={};
+  // Make a POST request to your server endpoint to update the user's admin status
+  axios.post(`http://localhost:3000/makeadmin/${userId}/${groupId}/${groupName}`,{data},{headers})
+      .then(response => {
+          // Handle the response if needed
+          console.log('User is now admin:', response.data);
+      })
+      .catch(error => {
+          // Handle any errors
+          console.error('Error making user admin:', error);
+      });
+}
+
+
 function displayMessages(messages) {
   container.innerHTML = '';
   
@@ -50,55 +65,21 @@ function displayMessages(messages) {
       container.appendChild(messageDiv);
   });
 
-  // Optionally, scroll to the bottom to show the latest messages
+ 
   container.scrollTop = container.scrollHeight;
 }
 
-// Set up polling to fetch chat messages and display userinfo every second
- //setInterval(fetchChatMessages, 1000);
 
-
-
-//document.getElementById('submit').addEventListener('click', function (event) {
- // event.preventDefault();
-  
- // const message = document.getElementById('message');
-  
-
-  
-       // Prevent the form from submitting normally
-
-    
-    //  const messages = message.value;
-      //const data = {
-        
-        //  message:messages
-          
-         
-    //  };
-
-      // Make a POST request to the /register route using Axios
-     // axios.post("http://localhost:3000/chat", data, { headers })
-       //   .then((response) => {
-         //     console.log('ducess login');
-            
-         // })
-          //.catch((error) => {
-            //  console.error('Error:', error);
-          //});
-  
-
-//});
 document.getElementById('submitgroup').addEventListener('click', function (event) {
   
   
   const group = document.getElementById('group');
   const groupname=group.value;
-  const data={
-    groupname:groupname
-  };
+  const formData = new FormData();
+  formData.append('groupname', groupname);
+  // Add any other form data fields as needed
   event.preventDefault();
-   axios.post("http://localhost:3000/group",data,{headers})
+   axios.post("http://localhost:3000/group",formData,{ headers })
    .then((response) => {
     console.log('group created');
   
@@ -109,6 +90,7 @@ document.getElementById('submitgroup').addEventListener('click', function (event
 
 
 });
+
 function showGroup(groups) {
   const container = document.getElementById('groupcontainer');
 
@@ -120,7 +102,7 @@ function showGroup(groups) {
     // Iterate through each group and create list items
     groups.forEach(group => {
       const li = document.createElement('li');
-      li.textContent = `${group.GroupName}`;
+      li.textContent = `${group.groupName}`;
 
       // Add a class when the mouse enters the list item
       li.addEventListener('mouseenter', () => {
@@ -137,7 +119,7 @@ function showGroup(groups) {
         // Handle the click event, e.g., show more details about the clicked group
           const groupId=group.id;
          
-        axios.get(`http://localhost:3000/groupmessage/${group.id}`, { headers })
+        axios.get(`http://localhost:3000/groupmessage/${group.id}`,{headers})
           .then(response => {
             // Handle the response data, e.g., display it or perform further actions
             console.log('GET request successful:', response.data);
@@ -213,19 +195,26 @@ function showGroup(groups) {
           memberElement.classList.add('member');
   
           // Construct the HTML content for each member
-          let memberInfoHTML =  `<p><strong>Name:</strong> ${member.Name}</p>
+          let memberInfoHTML =  `<p><strong>Name:</strong> ${member.name}</p>
               
           `;
   
       
-          if (member.Admin) {
+          if (member.admin) {
+            console.log('admin')
               // If member is an admin, add an icon to indicate it
               memberInfoHTML += `<p><i class="fas fa-crown"></i> Admin</p>`;
 
 
           } else {
               // If member is not an admin, add a button to make them admin
-              memberInfoHTML += `<button class="make-admin-btn" </button>`;
+              memberInfoHTML += `<button class="make-admin-btn" 
+                            data-user-id="${member.userId}" 
+                            data-group-id="${member.groupId}" 
+                            data-group-name="${member.groupName}"> 
+                            Make Admin 
+                      </button>`;
+    console.log('not admin')
           }
   
           // Set the HTML content for the member element
@@ -235,29 +224,21 @@ function showGroup(groups) {
           container.appendChild(memberElement);
   
           // Add event listener for "Make Admin" button
-          if (!member.Admin) {
+        if (!member.admin) {
               const makeAdminButton = memberElement.querySelector('.make-admin-btn');
               makeAdminButton.addEventListener('click', () => {
                   const userId = makeAdminButton.dataset.userId;
                   const groupId = makeAdminButton.dataset.groupId;
-                  makeAdmin(userId, groupId);
+                  const groupName=makeAdminButton.dataset.groupName;
+                  console.log(groupId);
+                  console.log(userId)
+                  makeAdmin(userId,groupId,groupName);
               });
           }
       });
   }
   
-  function makeAdmin(userId, groupId) {
-    // Make a POST request to your server endpoint to update the user's admin status
-    axios.post(`http://localhost:3000/makeadmin/${userId}/${groupId}`)
-        .then(response => {
-            // Handle the response if needed
-            console.log('User is now admin:', response.data);
-        })
-        .catch(error => {
-            // Handle any errors
-            console.error('Error making user admin:', error);
-        });
-}
+  
 
 
   
@@ -269,12 +250,15 @@ function showGroup(groups) {
     
     
     function addMemberToGroup(groupId) {
-        const newMemberEmail = document.getElementById('newMemberEmail').value;
-        // Perform validation if necessary
-        // Example: Check if the email is valid before adding
+        const newMemberEmaill = document.getElementById('newMemberEmail')
+        const email=newMemberEmaill.value;
+        console.log(email);
+        const data={
+          email:email
+        }
     
         // Send request to add the new member to the group
-        axios.post(`http://localhost:3000/group/${groupId}/addmember`, { email: newMemberEmail }, { headers })
+        axios.post(`http://localhost:3000/group/${groupId}/${email}/addmember`, { headers })
             .then(response => {
                 // Handle success
                 console.log('New member added successfully:', response.data);
@@ -299,7 +283,8 @@ function showGroup(groups) {
         axios.post(`http://localhost:3000/joingroup/${group.id}`, {}, { headers })
           .then(response => {
             // Handle the response data, e.g., display it or perform further actions
-            console.log('Join group clicked for Group ID:', group.id);
+            //console.log('Join group clicked for Group ID:', group.id);
+            console.log(response)
           })
           .catch(error => {
             console.error('Error making POST request:', error);
@@ -446,27 +431,18 @@ axios.get("http://localhost:3000/group")
         console.error('Error making GET request:', error);
       });
   });
-  axios.get("http://localhost:3000/group")
-  .then(response => {
-    console.log(response);
-    showGroup(response.data);
+  document.getElementById("logout").addEventListener("click", function() {
+    // Perform logout actions here
+    const token = localStorage.getItem('token');
+  
+
+ 
+          
+              // Call the logout function when the button is clicked
+              localStorage.removeItem('token');
+
+              // Redirect the user to the login page
+              window.location.href = "./register.html"
   })
-  .catch(error => {
-    console.log('Failed to fetch groups:', error);
-  })
-  socket.on('received', (groupId) => {
-    console.log('socket is working ')
-    // Call the function to fetch and display messages for the specified group
-    axios.get(`http://localhost:3000/groupmessage/${groupId}`, { headers })
-      .then(response => {
-        // Handle the response data, e.g., update the frontend display
-        console.log('GET request successful:', response.data);
-        // Update the right side with the new messages
-        displayMessages(response.data);
-        appendMessageInput(groupId);
-       appendMemberInput(groupId) // Replace with your actual function to display messages
-      })
-      .catch(error => {
-        console.error('Error making GET request:', error);
-      });
-  });
+
+  

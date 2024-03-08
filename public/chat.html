@@ -68,7 +68,7 @@
         }
 
         #inputContainer {
-    background-color: #345de2;
+    background-color: #365ee4;
     position: fixed;
     top: 480px; /* Adjust as needed */
     right: 430px; /* Adjust as needed */
@@ -128,7 +128,7 @@
         }
 
         .message {
-            background-color: #e0f7fa;
+            background-color: #811010;
             padding: 8px;
             margin-bottom: 16px;
             border-radius: 4px;
@@ -176,6 +176,9 @@
     border: 1px solid #ccc;
     border-radius: 5px;
 }
+.image-icon {
+    cursor: pointer;
+}
 
 #addMemberContainer input[type="email"] {
     margin-right: 5px;
@@ -210,7 +213,9 @@
         <form class="form" id="groupform" action="/group">
             <label for="group">Group Name</label>
             <input type="text" id="group" name="group">
-            <button type="submit" id="submitgroup">Create Group</button>
+            <button type="submit" id="submitgroup">Create Group</button> 
+            <button type="button" id="logout">Logout</button>
+           
         </form>
     </div>
 
